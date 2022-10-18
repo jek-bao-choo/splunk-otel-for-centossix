@@ -19,6 +19,7 @@ start() {
             printenv
             echo "init d checking environment variable has SPLUNK_REALM: $SPLUNK_REALM"
             echo "init d checking environment variable has SPLUNK_ACCESS_TOKEN: $SPLUNK_ACCESS_TOKEN"
+            echo "init d checking environment variable has SPLUNK_CONFIG: $SPLUNK_CONFIG"
             echo "running command: nohup otelcol > /dev/null 2>&1&"
             nohup otelcol > /dev/null 2>&1&
             echo "Starting... please check status with sudo service splunk-otel-for-centossix status"
