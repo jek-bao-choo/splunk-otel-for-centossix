@@ -1,0 +1,111 @@
+#!/bin/bash
+#
+# description: Unofficial Splunk OTEL Collector helper script for CentOS 6
+#
+# Get function from functions library
+# Primary author Mukund Babbar
+# Secondary author Jek Bao Choo
+# Verifying author Jerson Estinopo
+. /etc/init.d/functions
+
+start() {
+    echo "Starting Splunk OTEL Collector"
+	if [ ! -f /usr/bin/otelcol ]; then
+    	echo "Splunk OTEL Collector not installed hence cannot start. Install the collector using sudo service splunk-otel-for-centossix install"
+    else
+        if [ -f /etc/otel/collector/splunk-otel-collector.conf ]; then
+            echo "init d verifying /etc/otel/collector/splunk-otel-collector.conf content: $(cat /etc/otel/collector/splunk-otel-collector.conf)"
+            source /etc/otel/collector/splunk-otel-collector.conf
+            export SPLUNK_CONFIG SPLUNK_ACCESS_TOKEN SPLUNK_REALM
+            printenv
+            echo "init d checking environment variable has SPLUNK_REALM: $SPLUNK_REALM"
+            echo "init d checking environment variable has SPLUNK_ACCESS_TOKEN: $SPLUNK_ACCESS_TOKEN"
+            echo "running command: nohup otelcol > /dev/null 2>&1&"
+            nohup otelcol > /dev/null 2>&1&
+            echo "Starting... please check status with sudo service splunk-otel-for-centossix status"
+            status
+            echo
+        else
+            echo "No /etc/otel/collector/splunk-otel-collector.conf available please run it manually command: nohup bash -c 'SPLUNK_ACCESS_TOKEN=12345 SPLUNK_REALM=us1 SPLUNK_CONFIG=/etc/otel/collector/agent_config.yaml otelcol' > /dev/null 2>&1&"
+        fi
+	fi
+    echo
+}
+
+stop() {
+    stat=$(ps aux | grep otelcol | grep -v grep)
+    if [ -z "$stat" ]; then
+        echo "Splunk OTEL Collector: Not Running"
+    else
+	    echo "Stopping Splunk OTEL Collector"
+        kill $(ps aux | grep 'otelcol' | grep -v grep | awk '{print $2}')
+    fi
+    echo
+}
+
+status() {
+    echo "Checking status:"
+	stat=$(ps aux | grep otelcol | grep -v grep)
+    echo "$stat"
+	if [ -z "$stat" ]; then
+        echo -n "Splunk OTEL Collector: "
+        echo -e '\033[33mNot Running\033[0m'
+	else
+		echo -n "Splunk OTEL Collector: "
+		echo -e '\033[32mRunning\033[0m'
+	fi
+        echo
+}
+
+uninstall() {
+    echo "Uninstalling Splunk OTEL Collector"
+    yum remove -y splunk-otel-collector
+    echo
+}
+
+install() {
+    # https://github.com/signalfx/splunk-otel-collector/blob/main/docs/getting-started/linux-manual.md
+    echo "Installing Splunk OTEL Collector"
+    yum install -y libcap  # Required for enabling cap_dac_read_search and cap_sys_ptrace capabilities on the Collector
+
+cat <<EOH > /etc/yum.repos.d/splunk-otel-collector.repo
+[splunk-otel-collector]
+name=Splunk OpenTelemetry Collector Repository
+baseurl=https://splunk.jfrog.io/splunk/otel-collector-rpm/release/\$basearch
+gpgcheck=1
+gpgkey=https://splunk.jfrog.io/splunk/otel-collector-rpm/splunk-B3CD4420.pub
+enabled=1
+EOH
+
+    yum install -y splunk-otel-collector
+    echo
+}
+
+### Main ###
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  status)
+        status
+        ;;
+  install)
+        install
+        ;;
+
+  uninstall)
+        uninstall
+        ;;
+  restart)
+        stop
+        start
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|status|install|uninstall}"
+        exit 1
+esac
+
+exit 0
