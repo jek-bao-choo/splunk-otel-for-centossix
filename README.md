@@ -1,5 +1,6 @@
 # splunk-otel-for-centossix
  
+- Create a CentOS 6 instance
 - Download `curl -sSL https://raw.githubusercontent.com/jek-bao-choo/splunk-otel-for-centossix/main/splunk-otel-for-centossix > /tmp/splunk-otel-for-centossix`
 - Move `sudo mv /tmp/splunk-otel-for-centossix /etc/rc.d/init.d/`
 - Change mode `sudo chmod 755 /etc/rc.d/init.d/splunk-otel-for-centossix`
@@ -22,14 +23,16 @@ SPLUNK_COLLECTD_DIR=/usr/lib/splunk-otel-collector/agent-bundle/run/collectd
 EOF
 ```
 - Start `sudo service splunk-otel-for-centossix start`
-- Download Java agent (if using Java) `sudo mkdir /opt/splunk && curl -L https://github.com/signalfx/splunk-otel-java/releases/latest/download/splunk-otel-javaagent.jar -o /opt/splunk/splunk-otel-javaagent.jar`
-- Set environment variables
-- Add the following to java_opts if available `-javaagent:/opt/splunk/splunk-otel-javaagent.jar`
+- Check stats `sudo service splunk-otel-for-centossix status`
+
+- Optional: Download Java agent (if using Java) `sudo mkdir /opt/splunk && curl -L https://github.com/signalfx/splunk-otel-java/releases/latest/download/splunk-otel-javaagent.jar -o /opt/splunk/splunk-otel-javaagent.jar`
+- Optional: Set environment variables
+- Optional: Add the following to java_opts if available `-javaagent:/opt/splunk/splunk-otel-javaagent.jar`
 
 ---
 
-# We can read and decide if it is CentOS 6 or 7 then install splunk-otel-collector acorrdingly.
 # This is useful for adding to A+ Instructions Template
+We can read and decide if it is CentOS 6 or 7 then install splunk-otel-collector acorrdingly.
 
 ```bash
 export OTEL_SERVICE_NAME=<name your service>
