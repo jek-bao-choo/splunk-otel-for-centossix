@@ -35,6 +35,8 @@ EOF
 We can read and decide if it is CentOS 6 or 7 then install splunk-otel-collector acorrdingly.
 
 ```bash
+export OTEL_SERVICE_NAME=$(grep 'appname' /home/admin/conf/server.conf | awk '{print $3}')
+export OTEL_RESOURCE_ATTRIBUTES=deployment.environment=$(grep 'dbmode' /home/admin/conf/server.conf | awk '{print $3}')
 export SPLUNK_REALM=<your realm redacted>
 export SPLUNK_ACCESS_TOKEN=<your token redacted>
 export SPLUNK_HEC_URL=<your url redacted>
@@ -42,6 +44,8 @@ export SPLUNK_HEC_TOKEN=<your token redacted>
 export SPLUNK_CONFIG=/etc/otel/collector/agent_config.yaml
 
 sudo cat <<EOF > /etc/profile.d/splunk_otel.sh
+export OTEL_SERVICE_NAME=$OTEL_SERVICE_NAME
+export OTEL_RESOURCE_ATTRIBUTES=$OTEL_RESOURCE_ATTRIBUTES
 export SPLUNK_REALM=$SPLUNK_REALM
 export SPLUNK_ACCESS_TOKEN=$SPLUNK_ACCESS_TOKEN
 export SPLUNK_HEC_URL=$SPLUNK_HEC_URL
@@ -49,6 +53,8 @@ export SPLUNK_HEC_TOKEN=$SPLUNK_HEC_TOKEN
 export SPLUNK_CONFIG=$SPLUNK_CONFIG
 EOF
 
+echo "OTEL_SERVICE_NAME: $OTEL_SERVICE_NAME"
+echo "OTEL_RESOURCE_ATTRIBUTES: $OTEL_RESOURCE_ATTRIBUTES"
 echo "SPLUNK_REALM: $SPLUNK_REALM"
 echo "SPLUNK_ACCESS_TOKEN: $SPLUNK_ACCESS_TOKEN"
 echo "SPLUNK_HEC_URL: $SPLUNK_HEC_URL"
@@ -130,7 +136,7 @@ EOF
     sudo cp /opt/software/cloudengine/bin/startup.sh /opt/software/cloudengine/bin/startup_original_backup.sh
 
     echo "Exporting JAVA_OPTS with splunk otel javaagent.jar"
-    sudo echo 'export JAVA_OPTS="-javaagent:/opt/splunk/splunk-otel-javaagent.jar -Dotel.service.name=$(grep 'appname' /home/admin/conf/server.conf | awk '{print $3}') -Dotel.resource.attributes=deployment.environment=$(grep 'dbmode' /home/admin/conf/server.conf | awk '{print $3}') $JAVA_OPTS"' | cat -  /opt/software/cloudengine/bin/startup.sh > /tmp/startup_sh_tmp.txt 
+    sudo echo 'export JAVA_OPTS="-javaagent:/opt/splunk/splunk-otel-javaagent.jar $JAVA_OPTS"' | cat -  /opt/software/cloudengine/bin/startup.sh > /tmp/startup_sh_tmp.txt 
     echo "JAVA_OPTS:$JAVA_OPTS"
     
     echo "Moving file to cloudengine/bin command: sudo mv /tmp/startup_sh_tmp.txt  /opt/software/cloudengine/bin/startup.sh"
@@ -139,7 +145,7 @@ EOF
     echo "Changing from root to admin command: sudo chown admin:admin sudo chmod 755 /opt/software/cloudengine/bin/startup.sh"
     sudo chown admin:admin sudo chmod 755 /opt/software/cloudengine/bin/startup.sh
 
-    echo "Changing mode command: sudo chmod 755 /opt/software/cloudengine/bin/startup.sh"
+    echo "Changing mode command: sudo chmod 755 /opt/software/cloudengine/bin/startup.shs"
     sudo chmod 755 /opt/software/cloudengine/bin/startup.sh
 
     echo "Restart the java application..."
