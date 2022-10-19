@@ -139,7 +139,7 @@ EOF
     echo "Changing from root to admin command: sudo chown admin:admin sudo chmod 755 /opt/software/cloudengine/bin/startup.sh"
     sudo chown admin:admin sudo chmod 755 /opt/software/cloudengine/bin/startup.sh
 
-    echo "Changing mode command: sudo chmod 755 /opt/software/cloudengine/bin/startup.shs"
+    echo "Changing mode command: sudo chmod 755 /opt/software/cloudengine/bin/startup.sh"
     sudo chmod 755 /opt/software/cloudengine/bin/startup.sh
 
     echo "Restart the java application..."
