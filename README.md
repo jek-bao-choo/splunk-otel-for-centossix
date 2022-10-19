@@ -36,7 +36,7 @@ We can read and decide if it is CentOS 6 or 7 then install splunk-otel-collector
 
 ```bash
 export OTEL_SERVICE_NAME=$(grep 'appname' /home/admin/conf/server.conf | awk '{print $3}')
-export OTEL_RESOURCE_ATTRIBUTES=deployment.environment=<your env>
+export OTEL_RESOURCE_ATTRIBUTES=deployment.environment=$(grep 'dbmode' /home/admin/conf/server.conf | awk '{print $3}')
 export SPLUNK_REALM=<your realm redacted>
 export SPLUNK_ACCESS_TOKEN=<your token redacted>
 export SPLUNK_HEC_URL=<your url redacted>
