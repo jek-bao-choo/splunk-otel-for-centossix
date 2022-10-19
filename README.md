@@ -132,5 +132,22 @@ EOF
     echo "Downloading opentelemetry java agent to /opt/splunk/ command: sudo curl -L https://github.com/signalfx/splunk-otel-java/releases/latest/download/splunk-otel-javaagent.jar -o /opt/splunk/splunk-otel-javaagent.jar"
     sudo curl -L https://github.com/signalfx/splunk-otel-java/releases/latest/download/splunk-otel-javaagent.jar -o /opt/splunk/splunk-otel-javaagent.jar
     
+    echo "Creating a copy of original startup.sh command: sudo cp /opt/software/cloudengine/bin/startup.sh /opt/software/cloudengine/bin/startup_original_backup.sh"
+    sudo cp /opt/software/cloudengine/bin/startup.sh /opt/software/cloudengine/bin/startup_original_backup.sh
+
+    echo "Exporting JAVA_OPTS with splunk otel javaagent.jar"
+    sudo echo 'export JAVA_OPTS="-javaagent:/opt/splunk/splunk-otel-javaagent.jar $JAVA_OPTS"' | cat -  /opt/software/cloudengine/bin/startup.sh > /tmp/startup_sh_tmp.txt 
+    echo "JAVA_OPTS:$JAVA_OPTS"
+    
+    echo "Moving file to cloudengine/bin command: sudo mv /tmp/startup_sh_tmp.txt  /opt/software/cloudengine/bin/startup.sh"
+    sudo mv /tmp/startup_sh_tmp.txt  /opt/software/cloudengine/bin/startup.sh
+
+    echo "Changing from root to admin command: sudo chown admin:admin sudo chmod 755 /opt/software/cloudengine/bin/startup.sh"
+    sudo chown admin:admin sudo chmod 755 /opt/software/cloudengine/bin/startup.sh
+
+    echo "Changing mode command: sudo chmod 755 /opt/software/cloudengine/bin/startup.shs"
+    sudo chmod 755 /opt/software/cloudengine/bin/startup.sh
+
+    echo "Restart the java application..."
   fi
 ```
