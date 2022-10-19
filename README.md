@@ -132,8 +132,19 @@ EOF
     echo "Downloading opentelemetry java agent to /opt/splunk/ command: sudo curl -L https://github.com/signalfx/splunk-otel-java/releases/latest/download/splunk-otel-javaagent.jar -o /opt/splunk/splunk-otel-javaagent.jar"
     sudo curl -L https://github.com/signalfx/splunk-otel-java/releases/latest/download/splunk-otel-javaagent.jar -o /opt/splunk/splunk-otel-javaagent.jar
     
-    echo "Creating a copy of original startup.sh command: sudo cp /opt/software/cloudengine/bin/startup.sh /opt/software/cloudengine/bin/startup_original_backup.sh"
-    sudo cp /opt/software/cloudengine/bin/startup.sh /opt/software/cloudengine/bin/startup_original_backup.sh
+    if [ ! -f /opt/software/cloudengine/bin/startup_original_backup.sh ]; then
+      # Check if startup_original_backup.sh exists
+      # If exists use startup_original_backup.sh as startup.sh
+    	echo "Deleting startup.sh because it has been modified command: sudo rm -rf /opt/software/cloudengine/bin/startup.sh"
+      sudo rm -rf /opt/software/cloudengine/bin/startup.sh
+
+      echo "Restoring original startup.sh command: sudo cp /opt/software/cloudengine/bin/startup_original_backup.sh /opt/software/cloudengine/bin/startup.sh"
+      sudo cp /opt/software/cloudengine/bin/startup_original_backup.sh /opt/software/cloudengine/bin/startup.sh
+    else
+      # Else create backup
+      echo "Creating a copy of original startup.sh command: sudo cp /opt/software/cloudengine/bin/startup.sh /opt/software/cloudengine/bin/startup_original_backup.sh"
+      sudo cp /opt/software/cloudengine/bin/startup.sh /opt/software/cloudengine/bin/startup_original_backup.sh
+    fi
 
     echo "Exporting JAVA_OPTS with splunk otel javaagent.jar"
     sudo echo 'export JAVA_OPTS="-javaagent:/opt/splunk/splunk-otel-javaagent.jar $JAVA_OPTS"' | cat -  /opt/software/cloudengine/bin/startup.sh > /tmp/startup_sh_tmp.txt 
