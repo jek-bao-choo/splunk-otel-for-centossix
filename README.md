@@ -136,7 +136,7 @@ EOF
     sudo cp /opt/software/cloudengine/bin/startup.sh /opt/software/cloudengine/bin/startup_original_backup.sh
 
     echo "Exporting JAVA_OPTS with splunk otel javaagent.jar"
-    sudo echo 'export JAVA_OPTS="-javaagent:/opt/splunk/splunk-otel-javaagent.jar -Dsplunk.profiler.enabled=true -Dsplunk.profiler.memory.enabled=true -Dsplunk.metrics.enabled=true -XX:StartFlightRecording $JAVA_OPTS"' | cat -  /opt/software/cloudengine/bin/startup.sh > /tmp/startup_sh_tmp.txt 
+    sudo echo 'export JAVA_OPTS="-javaagent:/opt/splunk/splunk-otel-javaagent.jar $JAVA_OPTS"' | cat -  /opt/software/cloudengine/bin/startup.sh > /tmp/startup_sh_tmp.txt 
     echo "JAVA_OPTS:$JAVA_OPTS"
     
     echo "Moving file to cloudengine/bin command: sudo mv /tmp/startup_sh_tmp.txt  /opt/software/cloudengine/bin/startup.sh"
