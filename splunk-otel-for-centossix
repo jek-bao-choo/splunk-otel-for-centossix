@@ -8,7 +8,7 @@
 . /etc/init.d/functions
 
 start() {
-    # Last updated on 26 Feb 2024 7:31 PM SGT
+    # Last updated on 26 Feb 2024 7:40 PM SGT
     # Author: Jek
     echo "Starting Splunk OTEL Collector"
     local otelBinary="/usr/bin/otelcol"
@@ -31,17 +31,23 @@ start() {
         source $configPath
         
         # Check if required environment variables are set
-        if [ -z "$SPLUNK_GATEWAY_URL" ] || [ -z "$SPLUNK_CONFIG" ] || [ -z "$SPLUNK_ACCESS_TOKEN" ] || [ -z "$SPLUNK_REALM" ]; then
+        if [ -z "$SPLUNK_CONFIG" ] || [ -z "$SPLUNK_ACCESS_TOKEN" ] || [ -z "$SPLUNK_REALM" ]; then
             echo "Error: One or more required environment variables (SPLUNK_CONFIG, SPLUNK_ACCESS_TOKEN, SPLUNK_REALM) are not set."
             return 1
         fi
 
-        export SPLUNK_CONFIG SPLUNK_ACCESS_TOKEN SPLUNK_REALM SPLUNK_GATEWAY_URL
+        export SPLUNK_CONFIG SPLUNK_ACCESS_TOKEN SPLUNK_REALM
         echo "Environment variables set. Verifying:"
         echo "SPLUNK_REALM: $SPLUNK_REALM"
         echo "SPLUNK_ACCESS_TOKEN: $SPLUNK_ACCESS_TOKEN"
         echo "SPLUNK_CONFIG: $SPLUNK_CONFIG"
-        echo "SPLUNK_GATEWAY_URL: $SPLUNK_GATEWAY_URL"
+
+        if [ -n "$SPLUNK_GATEWAY_URL" ]; then
+            export SPLUNK_GATEWAY_URL
+            echo "SPLUNK_GATEWAY_URL is set to: $SPLUNK_GATEWAY_URL"
+        else
+            echo "SPLUNK_GATEWAY_URL is not set."
+        fi
 
         # Attempt to start the collector
         echo "Attempting to start the collector. Logging output to $logFile"
