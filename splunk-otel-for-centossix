@@ -3,17 +3,17 @@
 # description: Unofficial Splunk OTEL Collector helper script for CentOS 6
 #
 # Get function from functions library
-# Primary author Mukund Babbar
-# Secondary author Jek Bao Choo
+# Author Mukund Babbar
+# Author Jek Bao Choo
 . /etc/init.d/functions
 
 start() {
-    # Last updated on 26 Feb 2024 6:13 PM SGT
+    # Last updated on 26 Feb 2024 7:31 PM SGT
     # Author: Jek
     echo "Starting Splunk OTEL Collector"
     local otelBinary="/usr/bin/otelcol"
     local configPath="/etc/otel/collector/splunk-otel-collector.conf"
-    local logFile="/var/log/otelcol-startup.log"
+    local logFile="/var/log/centossix-otelcol-startup.log"
 
     # Check for the OTEL Collector binary
     if [ ! -f "$otelBinary" ]; then
@@ -31,16 +31,17 @@ start() {
         source $configPath
         
         # Check if required environment variables are set
-        if [ -z "$SPLUNK_CONFIG" ] || [ -z "$SPLUNK_ACCESS_TOKEN" ] || [ -z "$SPLUNK_REALM" ]; then
+        if [ -z "$SPLUNK_GATEWAY_URL" ] || [ -z "$SPLUNK_CONFIG" ] || [ -z "$SPLUNK_ACCESS_TOKEN" ] || [ -z "$SPLUNK_REALM" ]; then
             echo "Error: One or more required environment variables (SPLUNK_CONFIG, SPLUNK_ACCESS_TOKEN, SPLUNK_REALM) are not set."
             return 1
         fi
 
-        export SPLUNK_CONFIG SPLUNK_ACCESS_TOKEN SPLUNK_REALM
+        export SPLUNK_CONFIG SPLUNK_ACCESS_TOKEN SPLUNK_REALM SPLUNK_GATEWAY_URL
         echo "Environment variables set. Verifying:"
         echo "SPLUNK_REALM: $SPLUNK_REALM"
         echo "SPLUNK_ACCESS_TOKEN: $SPLUNK_ACCESS_TOKEN"
         echo "SPLUNK_CONFIG: $SPLUNK_CONFIG"
+        echo "SPLUNK_GATEWAY_URL: $SPLUNK_GATEWAY_URL"
 
         # Attempt to start the collector
         echo "Attempting to start the collector. Logging output to $logFile"
