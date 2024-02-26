@@ -49,6 +49,7 @@ start() {
 
         if [ $startStatus -eq 0 ]; then
             echo "Collector started successfully. Please check status with 'sudo service splunk-otel-for-centossix status'."
+            echo "For more information please check the log file at $logFile for details."
         else
             echo "Error: Collector failed to start. Please check the log file at $logFile for details."
             return 1
@@ -113,6 +114,7 @@ status() {
         # Consider showing memory and CPU usage for the process
         local procStats=$(ps -p $pid -o %cpu=,%mem=,etime=)
         echo "CPU Usage(%), Memory Usage(%), Elapsed Time: $procStats"
+        echo "For more information please check the log file at $logFile for details."
     fi
     echo
 }
