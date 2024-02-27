@@ -43,12 +43,12 @@ start() {
         echo "SPLUNK_CONFIG: $SPLUNK_CONFIG"
 
         # Optional: Check and export variables for example SPLUNK_GATEWAY_URL
-        # if [ -n "$SPLUNK_GATEWAY_URL" ]; then
-        #     export SPLUNK_GATEWAY_URL
-        #     echo "SPLUNK_GATEWAY_URL is set to: $SPLUNK_GATEWAY_URL"
-        # else
-        #     echo "SPLUNK_GATEWAY_URL is not set."
-        # fi
+        if [ -n "$SPLUNK_GATEWAY_URL" ]; then
+           export SPLUNK_GATEWAY_URL
+           echo "SPLUNK_GATEWAY_URL is set to: $SPLUNK_GATEWAY_URL"
+        else
+           echo "SPLUNK_GATEWAY_URL is not set."
+        fi
 
         # Attempt to start the collector
         echo "Attempting to start the collector. Logging output to $logFile"
