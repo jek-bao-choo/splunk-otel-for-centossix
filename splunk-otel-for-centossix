@@ -3,170 +3,71 @@
 # description: Unofficial Splunk OTEL Collector helper script for CentOS 6
 #
 # Get function from functions library
-# Author Mukund Babbar
-# Author Jek Bao Choo
+# Primary author Mukund Babbar
+# Secondary author Jek Bao Choo
 . /etc/init.d/functions
 
 start() {
-    # Last updated on 26 Feb 2024 7:40 PM SGT
-    # Author: Jek
     echo "Starting Splunk OTEL Collector"
-    local otelBinary="/usr/bin/otelcol"
-    local configPath="/etc/otel/collector/splunk-otel-collector.conf"
-    local logFile="/var/log/centossix-otelcol-startup.log"
-
-    # Check for the OTEL Collector binary
-    if [ ! -f "$otelBinary" ]; then
-        echo "Error: Splunk OTEL Collector binary not found at $otelBinary. Please install the collector."
-        return 1
-    fi
-
-    # Check for the configuration file
-    if [ ! -f "$configPath" ]; then
-        echo "Warning: Configuration file not found at $configPath."
-        echo "Please ensure the configuration file exists or specify the configuration manually."
-        return 1
+	if [ ! -f /usr/bin/otelcol ]; then
+    	echo "Splunk OTEL Collector not installed hence cannot start. Install the collector using sudo service splunk-otel-for-centossix install"
     else
-        echo "Verifying configuration file content: $(cat $configPath)"
-        source $configPath
-        
-        # Check if required environment variables are set
-        if [ -z "$SPLUNK_CONFIG" ] || [ -z "$SPLUNK_ACCESS_TOKEN" ] || [ -z "$SPLUNK_REALM" ]; then
-            echo "Error: One or more required environment variables (SPLUNK_CONFIG, SPLUNK_ACCESS_TOKEN, SPLUNK_REALM) are not set."
-            return 1
-        fi
-
-        export SPLUNK_CONFIG SPLUNK_ACCESS_TOKEN SPLUNK_REALM
-        echo "Environment variables set. Verifying:"
-        echo "SPLUNK_REALM: $SPLUNK_REALM"
-        echo "SPLUNK_ACCESS_TOKEN: $SPLUNK_ACCESS_TOKEN"
-        echo "SPLUNK_CONFIG: $SPLUNK_CONFIG"
-
-        # Optional: Check and export variables for example SPLUNK_GATEWAY_URL
-        # if [ -n "$SPLUNK_GATEWAY_URL" ]; then
-        #     export SPLUNK_GATEWAY_URL
-        #     echo "SPLUNK_GATEWAY_URL is set to: $SPLUNK_GATEWAY_URL"
-        # else
-        #     echo "SPLUNK_GATEWAY_URL is not set."
-        # fi
-
-        # Attempt to start the collector
-        echo "Attempting to start the collector. Logging output to $logFile"
-        nohup $otelBinary > /dev/null 2>$logFile &
-        local startStatus=$?
-
-        if [ $startStatus -eq 0 ]; then
-            echo "Collector started successfully. Please check status with 'sudo service splunk-otel-for-centossix status'."
-            echo "For more information please check the log file at $logFile for details."
+        if [ -f /etc/otel/collector/splunk-otel-collector.conf ]; then
+            echo "init d verifying /etc/otel/collector/splunk-otel-collector.conf content: $(cat /etc/otel/collector/splunk-otel-collector.conf)"
+            source /etc/otel/collector/splunk-otel-collector.conf
+            export SPLUNK_CONFIG SPLUNK_ACCESS_TOKEN SPLUNK_REALM
+            printenv
+            echo "init d checking environment variable has SPLUNK_REALM: $SPLUNK_REALM"
+            echo "init d checking environment variable has SPLUNK_ACCESS_TOKEN: $SPLUNK_ACCESS_TOKEN"
+            echo "init d checking environment variable has SPLUNK_CONFIG: $SPLUNK_CONFIG"
+            echo "running command: nohup otelcol > /dev/null 2>&1&"
+            nohup otelcol > /dev/null 2>&1&
+            echo "Starting... please check status with sudo service splunk-otel-for-centossix status"
+            status
+            echo
         else
-            echo "Error: Collector failed to start. Please check the log file at $logFile for details."
-            return 1
+            echo "No /etc/otel/collector/splunk-otel-collector.conf available please run it manually command: nohup bash -c 'SPLUNK_ACCESS_TOKEN=12345 SPLUNK_REALM=us1 SPLUNK_CONFIG=/etc/otel/collector/agent_config.yaml otelcol' > /dev/null 2>&1&"
         fi
-    fi
+	fi
     echo
 }
 
 stop() {
-    # Last updated on 26 Feb 2024 6:13 PM SGT
-    # Author: Jek
-    echo "Attempting to stop Splunk OTEL Collector..."
-
-    # Use pgrep for more accurate process identification
-    local pids=$(pgrep -f otelcol)
-
-    if [ -z "$pids" ]; then
+    stat=$(ps aux | grep otelcol | grep -v grep)
+    if [ -z "$stat" ]; then
         echo "Splunk OTEL Collector: Not Running"
     else
-        # Attempt a graceful shutdown first
-        echo "Sending SIGTERM to Splunk OTEL Collector..."
-        kill $pids
-
-        # Wait a bit to allow for a graceful shutdown
-        sleep 5
-
-        # Check if the process is still running and force kill if necessary
-        if ps -p $pids > /dev/null; then
-            echo "Splunk OTEL Collector did not shut down gracefully; sending SIGKILL..."
-            kill -9 $pids
-
-            # Verify if it's stopped
-            sleep 2
-            if ps -p $pids > /dev/null; then
-                echo "Failed to stop Splunk OTEL Collector."
-            else
-                echo "Splunk OTEL Collector forcibly stopped."
-            fi
-        else
-            echo "Splunk OTEL Collector stopped gracefully."
-        fi
+	    echo "Stopping Splunk OTEL Collector"
+        kill $(ps aux | grep 'otelcol' | grep -v grep | awk '{print $2}')
     fi
     echo
 }
 
 status() {
-    # Last updated on 26 Feb 2024 6:13 PM SGT
-    # Author: Jek
-    echo "Checking status of Splunk OTEL Collector:"
-    # Using pgrep for more accurate process checking
-    local pid=$(pgrep -f otelcol)
-
-    if [ -z "$pid" ]; then
-        echo -e "Splunk OTEL Collector: \033[33mNot Running\033[0m"
-    else
-        echo -e "Splunk OTEL Collector: \033[32mRunning\033[0m"
-        # Display more details about the running process
-        echo "Process ID: $pid"
-        # Optionally, show the command line invocation for the process for verification
-        local cmdline=$(ps -p $pid -o args=)
-        echo "Command Line: $cmdline"
-        # Consider showing memory and CPU usage for the process
-        local procStats=$(ps -p $pid -o %cpu=,%mem=,etime=)
-        echo "CPU Usage(%), Memory Usage(%), Elapsed Time: $procStats"
-        echo "For more information please check the log file at $logFile for details."
-    fi
-    echo
+    echo "Checking status:"
+	stat=$(ps aux | grep otelcol | grep -v grep)
+    echo "$stat"
+	if [ -z "$stat" ]; then
+        echo -n "Splunk OTEL Collector: "
+        echo -e '\033[33mNot Running\033[0m'
+	else
+		echo -n "Splunk OTEL Collector: "
+		echo -e '\033[32mRunning\033[0m'
+	fi
+        echo
 }
 
 uninstall() {
-    # Last updated on 26 Feb 2024 6:13 PM SGT
-    # Author: Jek
-    echo "Uninstalling Splunk OTEL Collector..."
-    
-    # Check if the collector is installed before attempting to uninstall
-    if yum list installed splunk-otel-collector >/dev/null 2>&1; then
-        yum remove -y splunk-otel-collector
-        if [ $? -eq 0 ]; then
-            echo "Splunk OTEL Collector successfully uninstalled."
-        else
-            echo "Failed to uninstall Splunk OTEL Collector."
-            return 1
-        fi
-    else
-        echo "Splunk OTEL Collector is not installed."
-    fi
+    echo "Uninstalling Splunk OTEL Collector"
+    yum remove -y splunk-otel-collector
     echo
 }
 
 install() {
-    # Last updated on 26 Feb 2024 6:13 PM SGT
-    # Author: Jek
-    echo "Preparing to install Splunk OTEL Collector..."
-
-    # Optional to Ensure the system is up-to-date before installing new packages
-    # echo "Updating system packages..."
-    # yum update -y
-
     # https://github.com/signalfx/splunk-otel-collector/blob/main/docs/getting-started/linux-manual.md
-    # Install prerequisite packages
-    echo "Installing prerequisite packages..."
-    yum install -y libcap
-    if [ $? -ne 0 ]; then
-        echo "Failed to install prerequisite packages."
-        return 1
-    fi
+    echo "Installing Splunk OTEL Collector"
+    yum install -y libcap  # Required for enabling cap_dac_read_search and cap_sys_ptrace capabilities on the Collector
 
-    # Configure the repository for the Splunk OTEL Collector
-    echo "Configuring Splunk OTEL Collector repository..."
 cat <<EOH > /etc/yum.repos.d/splunk-otel-collector.repo
 [splunk-otel-collector]
 name=Splunk OpenTelemetry Collector Repository
@@ -176,84 +77,34 @@ gpgkey=https://splunk.jfrog.io/splunk/otel-collector-rpm/splunk-B3CD4420.pub
 enabled=1
 EOH
 
-    # Install the Splunk OTEL Collector
-    echo "Installing Splunk OTEL Collector..."
     yum install -y splunk-otel-collector
-    if [ $? -eq 0 ]; then
-        echo "Splunk OTEL Collector successfully installed."
-    else
-        echo "Failed to install Splunk OTEL Collector."
-        return 1
-    fi
-
-    # Optional: Provide the option to install additional components
-    # echo "Optional: Installing Splunk OpenTelemetry Auto Instrumentation..."
-    # yum install -y splunk-otel-auto-instrumentation
-
     echo
-
 }
 
 ### Main ###
 case "$1" in
   start)
-        echo "Attempting to start the Splunk OTEL Collector..."
         start
-        if [ $? -eq 0 ]; then
-            echo "Start operation completed successfully."
-        else
-            echo "Start operation failed."
-            exit 1
-        fi
         ;;
   stop)
-        echo "Attempting to stop the Splunk OTEL Collector..."
         stop
-        if [ $? -eq 0 ]; then
-            echo "Stop operation completed successfully."
-        else
-            echo "Stop operation failed."
-            exit 1
-        fi
         ;;
   status)
-        echo "Checking the status of the Splunk OTEL Collector..."
         status
-        # No exit code check needed for status
         ;;
   install)
-        echo "Starting the installation of the Splunk OTEL Collector..."
         install
-        if [ $? -eq 0 ]; then
-            echo "Installation completed successfully."
-        else
-            echo "Installation failed."
-            exit 1
-        fi
         ;;
+
   uninstall)
-        echo "Starting the uninstallation of the Splunk OTEL Collector..."
         uninstall
-        if [ $? -eq 0 ]; then
-            echo "Uninstallation completed successfully."
-        else
-            echo "Uninstallation failed."
-            exit 1
-        fi
         ;;
   restart)
-        echo "Restarting the Splunk OTEL Collector..."
         stop
         start
-        if [ $? -eq 0 ]; then
-            echo "Restart operation completed successfully."
-        else
-            echo "Restart operation failed."
-            exit 1
-        fi
         ;;
   *)
-        echo "Usage: $0 {start|stop|restart|status|install|uninstall}"
+        echo $"Usage: $0 {start|stop|restart|status|install|uninstall}"
         exit 1
 esac
 
